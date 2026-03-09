@@ -1,0 +1,60 @@
+Project Whiteboard Plan: 4dtakki Game Development
+
+This plan outlines the core infrastructure and monetization features required for the next phase of 4dtakki.
+1. User Authentication & Profile Management
+
+Objective: Establish persistent user identity and personalization.
+
+    User Login System: Implement a secure authentication flow (e.g., Firebase Auth or Google Identity Services) to sync progress across devices.
+
+    User Avatar System:
+
+        Initialize with 5 Basic Avatar Images unlocked by default.
+
+        Support for "Avatar Packs" within the shop.
+
+        Tiered Pricing: Standard packs vs. Premium/Complex packs with increasing credit costs.
+
+2. Economy & Currency System
+
+Objective: Create a closed-loop economy to drive engagement and monetization.
+
+    In-Game Currency: Implementation of a "Coins/Credits/Chips" system.
+
+    Earning Mechanics:
+
+        Performance-Based: Fixed credit rewards for game wins.
+
+        Ad-Based: Integration of Google AdMob (or relevant Google Cloud developer resources) to provide "Rewarded Ads" for supplemental credits.
+
+3. Progression & Difficulty Scaling
+
+Objective: Gating content to encourage currency spend and replayability.
+
+    Difficulty Locking:
+
+        Easy Mode: Unlocked for all users at start.
+
+        Medium/Hard/Expert: Locked by default.
+
+    Unlock Flow: Users must spend in-game credits to permanently unlock higher difficulty tiers.
+
+4. Customization Shop (The "Marketplace")
+
+Objective: Provide aesthetic sinks for accumulated currency.
+
+    Player Color Customization: Individual purchase options for game-piece or UI highlights.
+
+    Gameplay Themes: * Individual Assets: Background images or specific UI skins available for lower credit amounts.
+
+        Theme Packs: Bundled sets (Background + Colors + UI) available at a premium "Full Pack" price.
+
+5. Technical Implementation Checklist
+
+    [ ] Setup Virtual Environment and Project Dependencies.
+
+    [ ] Integrate AdMob SDK and configure Reward Callbacks.
+
+    [ ] Design Database Schema for User Profiles (JSON/NoSQL) to track owned assets.
+
+    [ ] Implement Shop UI with conditional "Purchase/Equip" logic.

@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/velvetfox24/4dtaki#readme",
   "dependencies": {
+    "@capacitor-community/admob": "^8.0.0",
     "@capacitor/android": "^8.2.0",
     "@capacitor/cli": "^8.2.0",
     "@capacitor/core": "^8.2.0"

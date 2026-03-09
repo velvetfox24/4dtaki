@@ -14,6 +14,50 @@ let gameMode = 'ai'; // 'ai' or 'pvp'
 let aiDifficulty = 'normal'; // easy, normal, hard, extreme, impossible
 let gameRunning = false;
 
+// AdMob Configuration (Using Official Google Test Units for rendering during development)
+// The user provided their Publisher ID (pub-3231687942410675), which went into AndroidManifest.xml.
+const adUnits = {
+    interstitial: 'ca-app-pub-3940256099942544/1033173712',
+    rewarded: 'ca-app-pub-3940256099942544/5224354917',
+    banner: 'ca-app-pub-3940256099942544/6300978111'
+};
+
+let adMobInitialized = false;
+
+async function initAdMob() {
+    try {
+        const { AdMob } = await import('@capacitor-community/admob');
+        await AdMob.initialize({
+            requestTrackingAuthorization: true,
+            testingDevices: ['2077ef9a63d2b398840261c8221a0c9b'],
+            initializeForTesting: true,
+        });
+        
+        adMobInitialized = true;
+        
+        // Prepare interstitial ad early
+        await AdMob.prepareInterstitial({ adId: adUnits.interstitial });
+        
+        // Load banner ad at bottom
+        await AdMob.showBanner({
+            adId: adUnits.banner,
+            adSize: 'BANNER',
+            position: 'BOTTOM_CENTER',
+            margin: 0,
+            isTesting: true
+        });
+        
+        console.log("AdMob Initialized.");
+    } catch (e) {
+        console.warn("AdMob initialization failed (Running in browser?)", e);
+    }
+}
+
+// Call init on load
+if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+     initAdMob();
+}
+
 let currentUser = null;
 
 // Scoring Matrix
@@ -176,6 +220,19 @@ function resetGameInternal() {
 function triggerGameOver(winner) {
     gameRunning = false;
     let message = '';
+    
+    // Attempt to show Interstitial Ad (Popup between games)
+    if (adMobInitialized && window.Capacitor && window.Capacitor.isNativePlatform()) {
+        import('@capacitor-community/admob').then(async ({ AdMob }) => {
+            try {
+                await AdMob.showInterstitial();
+                // Prep next one immediately
+                await AdMob.prepareInterstitial({ adId: adUnits.interstitial });
+            } catch (e) {
+                console.warn("Could not show interstitial", e);
+            }
+        });
+    }
     
     let pointsGained = 0;
     if (currentUser) {
