@@ -1,0 +1,25 @@
+{
+  "name": "4dtaki",
+  "version": "1.0.0",
+  "description": "3d tic-tac-toe on a 4x4x4 board",
+  "main": "game.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/velvetfox24/4dtaki.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/velvetfox24/4dtaki/issues"
+  },
+  "homepage": "https://github.com/velvetfox24/4dtaki#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/cli": "^8.2.0",
+    "@capacitor/core": "^8.2.0"
+  }
+}

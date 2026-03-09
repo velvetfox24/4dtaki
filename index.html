@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>4D-Taki | 3D Tic-Tac-Toe</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div id="setup-menu" class="fullscreen-menu">
+        <h1>4D-Taki</h1>
+        
+        <div class="menu-group">
+            <label>Mode:</label>
+            <select id="mode-select" onchange="toggleDifficulty()">
+                <option value="ai">Player vs CPU</option>
+                <option value="pvp">Player vs Player</option>
+            </select>
+        </div>
+
+        <div class="menu-group" id="difficulty-group">
+            <label>CPU Difficulty:</label>
+            <select id="difficulty-select">
+                <option value="easy">Easy (Random)</option>
+                <option value="normal" selected>Normal</option>
+                <option value="hard">Hard</option>
+                <option value="extreme">Extreme</option>
+                <option value="impossible">Impossible</option>
+            </select>
+        </div>
+
+        <button onclick="document.startGame(document.getElementById('mode-select').value, document.getElementById('difficulty-select').value)" class="start-btn">ENGAGE</button>
+
+        <div class="credits">
+            <p>Brought to you by 4creative-innovations</p>
+            <p>Developed by Zerostasis & 4Creative-Teams</p>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="game-over-overlay" class="fullscreen-menu" style="display: none;">
+        <h1 id="game-over-text">Game Over</h1>
+        <button onclick="document.resetGame()" class="start-btn">PLAY AGAIN</button>
+        <button onclick="document.showMainMenu()" class="start-btn" style="margin-top: 10px; background: #002244;">MAIN MENU</button>
+    </div>
+
+    <div id="ui-layer" style="display: none;">
+        <div id="stats-bar">
+            <span>Wins: <span id="win-count">0</span></span>
+            <span>Losses: <span id="loss-count">0</span></span>
+        </div>
+        <div id="game-info">
+            <h1 id="status">Your Turn</h1>
+            <button id="hint-btn">Get LLM Hint</button>
+        </div>
+    </div>
+    <div id="canvas-container"></div>
+    <script src="game.js"></script>
+    <script>
+        // Expose functions globally for the buttons
+        document.startGame = startGame;
+        document.resetGame = resetGame;
+        document.showMainMenu = showMainMenu;
+        
+        function toggleDifficulty() {
+            var mode = document.getElementById('mode-select').value;
+            var diffGroup = document.getElementById('difficulty-group');
+            if(mode === 'pvp') diffGroup.style.display = 'none';
+            else diffGroup.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
