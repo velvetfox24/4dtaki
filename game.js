@@ -14,6 +14,31 @@ let gameMode = 'ai'; // 'ai' or 'pvp'
 let aiDifficulty = 'normal'; // easy, normal, hard, extreme, impossible
 let gameRunning = false;
 
+// Precompute win lines for fast evaluation
+const WIN_LINES = [];
+(function precomputeWinLines() {
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+            WIN_LINES.push([[0,i,j], [1,i,j], [2,i,j], [3,i,j]]);
+            WIN_LINES.push([[i,0,j], [i,1,j], [i,2,j], [i,3,j]]);
+            WIN_LINES.push([[i,j,0], [i,j,1], [i,j,2], [i,j,3]]);
+        }
+    }
+    for (let i = 0; i < 4; i++) {
+        WIN_LINES.push([[i,0,0], [i,1,1], [i,2,2], [i,3,3]]);
+        WIN_LINES.push([[i,3,0], [i,2,1], [i,1,2], [i,0,3]]);
+        WIN_LINES.push([[0,i,0], [1,i,1], [2,i,2], [3,i,3]]);
+        WIN_LINES.push([[3,i,0], [2,i,1], [1,i,2], [0,i,3]]);
+        WIN_LINES.push([[0,0,i], [1,1,i], [2,2,i], [3,3,i]]);
+        WIN_LINES.push([[3,0,i], [2,1,i], [1,2,i], [0,3,i]]);
+    }
+    WIN_LINES.push([[0,0,0], [1,1,1], [2,2,2], [3,3,3]]);
+    WIN_LINES.push([[3,0,0], [2,1,1], [1,2,2], [0,3,3]]);
+    WIN_LINES.push([[0,3,0], [1,2,1], [2,1,2], [3,0,3]]);
+    WIN_LINES.push([[0,0,3], [1,1,2], [2,2,1], [3,3,0]]);
+})();
+
+
 let player1Wins = 0;
 let player2Wins = 0;
 
@@ -341,18 +366,41 @@ function checkLine(p, c1, c2, c3, c4) {
 function aiMove() {
     if (!gameRunning) return;
     
-    // Evaluate Difficulty
-    // Currently, all difficulties fall back to random until Minimax is fully implemented. 
-    // This is where 'easy/normal/hard/extreme/impossible' logic goes.
-    
+    let bestMove = null;
     let available = [];
-    scene.children.forEach(obj => {
-        if (obj.userData && obj.userData.owner === 0 && obj.geometry instanceof THREE.BoxGeometry) available.push(obj);
-    });
+    
+    for(let x=0; x<SIZE; x++) {
+        for(let y=0; y<SIZE; y++) {
+            for(let z=0; z<SIZE; z++) {
+                if(board[x][y][z].userData.owner === 0) {
+                    available.push(board[x][y][z]);
+                }
+            }
+        }
+    }
 
-    if (available.length > 0) {
-        const pick = available[Math.floor(Math.random() * available.length)];
-        makeMove(pick, 2);
+    if (available.length === 0) return;
+
+    if (aiDifficulty === 'easy') {
+        bestMove = available[Math.floor(Math.random() * available.length)];
+    } else {
+        let depth = 0;
+        let randomness = 0;
+        if (aiDifficulty === 'normal') { depth = 1; randomness = 0.5; }
+        else if (aiDifficulty === 'hard') { depth = 2; randomness = 0.2; }
+        else if (aiDifficulty === 'extreme') { depth = 3; randomness = 0.05; }
+        else if (aiDifficulty === 'impossible') { depth = 3; randomness = 0; } // 3-ply + Alpha-Beta is generally tough enough and avoids freezing
+        
+        // Sometimes just pick randomly if not impossible, to simulate mistakes
+        if (Math.random() < randomness) {
+            bestMove = available[Math.floor(Math.random() * available.length)];
+        } else {
+            bestMove = getBestMoveMinimax(2, depth, available);
+        }
+    }
+
+    if (bestMove) {
+        makeMove(bestMove, 2);
         if (!checkWin(2)) {
             currentPlayer = 1;
             document.getElementById('status').innerText = 'Player 1 Turn';
@@ -360,6 +408,121 @@ function aiMove() {
             triggerGameOver(2);
         }
     }
+}
+
+function getBestMoveMinimax(player, maxDepth, availableCubes) {
+    let bestScore = -Infinity;
+    let bestMove = null;
+    
+    // Sort available moves by center proximity heuristic to improve alpha-beta pruning
+    availableCubes.sort((a, b) => {
+        const distA = Math.abs(1.5 - a.userData.x) + Math.abs(1.5 - a.userData.y) + Math.abs(1.5 - a.userData.z);
+        const distB = Math.abs(1.5 - b.userData.x) + Math.abs(1.5 - b.userData.y) + Math.abs(1.5 - b.userData.z);
+        return distA - distB;
+    });
+
+    for (let move of availableCubes) {
+        move.userData.owner = player;
+        let score = minimax(maxDepth - 1, false, -Infinity, Infinity, player);
+        move.userData.owner = 0;
+        
+        if (score > bestScore || bestMove === null) {
+            bestScore = score;
+            bestMove = move;
+        }
+    }
+    return bestMove || availableCubes[0];
+}
+
+function minimax(depth, isMaximizing, alpha, beta, aiPlayer) {
+    const oppPlayer = aiPlayer === 1 ? 2 : 1;
+    
+    // Fast win check using precomputed lines
+    if (fastCheckWin(aiPlayer)) return 100000 + depth;
+    if (fastCheckWin(oppPlayer)) return -100000 - depth;
+    
+    if (depth <= 0) {
+        return evaluateBoard(aiPlayer);
+    }
+    
+    if (isMaximizing) {
+        let maxEval = -Infinity;
+        for(let x=0; x<SIZE; x++) {
+            for(let y=0; y<SIZE; y++) {
+                for(let z=0; z<SIZE; z++) {
+                    const cell = board[x][y][z];
+                    if(cell.userData.owner === 0) {
+                        cell.userData.owner = aiPlayer;
+                        let evaluation = minimax(depth - 1, false, alpha, beta, aiPlayer);
+                        cell.userData.owner = 0;
+                        maxEval = Math.max(maxEval, evaluation);
+                        alpha = Math.max(alpha, evaluation);
+                        if (beta <= alpha) return maxEval;
+                    }
+                }
+            }
+        }
+        // If no moves, draw
+        if (maxEval === -Infinity) return 0;
+        return maxEval;
+    } else {
+        let minEval = Infinity;
+        for(let x=0; x<SIZE; x++) {
+            for(let y=0; y<SIZE; y++) {
+                for(let z=0; z<SIZE; z++) {
+                    const cell = board[x][y][z];
+                    if(cell.userData.owner === 0) {
+                        cell.userData.owner = oppPlayer;
+                        let evaluation = minimax(depth - 1, true, alpha, beta, aiPlayer);
+                        cell.userData.owner = 0;
+                        minEval = Math.min(minEval, evaluation);
+                        beta = Math.min(beta, evaluation);
+                        if (beta <= alpha) return minEval;
+                    }
+                }
+            }
+        }
+        if (minEval === Infinity) return 0;
+        return minEval;
+    }
+}
+
+function fastCheckWin(player) {
+    for (let line of WIN_LINES) {
+        if (board[line[0][0]][line[0][1]][line[0][2]].userData.owner === player &&
+            board[line[1][0]][line[1][1]][line[1][2]].userData.owner === player &&
+            board[line[2][0]][line[2][1]][line[2][2]].userData.owner === player &&
+            board[line[3][0]][line[3][1]][line[3][2]].userData.owner === player) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function evaluateBoard(aiPlayer) {
+    let score = 0;
+    const oppPlayer = aiPlayer === 1 ? 2 : 1;
+    
+    for (let line of WIN_LINES) {
+        let aiCount = 0;
+        let oppCount = 0;
+        for (let [x, y, z] of line) {
+            const owner = board[x][y][z].userData.owner;
+            if (owner === aiPlayer) aiCount++;
+            else if (owner === oppPlayer) oppCount++;
+        }
+        
+        if (aiCount > 0 && oppCount === 0) {
+            if (aiCount === 1) score += 1;
+            else if (aiCount === 2) score += 10;
+            else if (aiCount === 3) score += 500;
+        } else if (oppCount > 0 && aiCount === 0) {
+            if (oppCount === 1) score -= 1;
+            else if (oppCount === 2) score -= 10;
+            else if (oppCount === 3) score -= 1000; // Prioritize blocking
+        }
+    }
+    return score;
 }
 
 function createLightCycle(colorHex, startX, y, startZ, dirX, dirZ) {
