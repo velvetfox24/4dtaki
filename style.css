@@ -67,7 +67,7 @@ body {
     font-weight: bold;
 }
 
-select {
+select, input[type="text"] {
     width: 100%;
     padding: 10px;
     background: #050a0f;
@@ -77,9 +77,10 @@ select {
     font-size: 16px;
     outline: none;
     cursor: pointer;
+    box-sizing: border-box;
 }
 
-select:focus {
+select:focus, input[type="text"]:focus {
     box-shadow: 0 0 8px rgba(0, 136, 255, 0.8);
 }
 

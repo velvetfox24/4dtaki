@@ -14,6 +14,79 @@ let gameMode = 'ai'; // 'ai' or 'pvp'
 let aiDifficulty = 'normal'; // easy, normal, hard, extreme, impossible
 let gameRunning = false;
 
+let currentUser = null;
+
+// Scoring Matrix
+const SCORE_MATRIX = {
+    'pvp': 50,
+    'easy': 10,
+    'normal': 25,
+    'hard': 50,
+    'extreme': 100,
+    'impossible': 200
+};
+
+// Auto-login on load
+window.onload = () => {
+    const lastUser = localStorage.getItem('4dtaki_lastUser');
+    if (lastUser) {
+        document.getElementById('username-input').value = lastUser;
+        loginUser();
+    }
+};
+
+function loginUser() {
+    const username = document.getElementById('username-input').value.trim();
+    if (!username) {
+        alert("Please enter a username or player name.");
+        return;
+    }
+    
+    // Check if user exists in local storage
+    let userStats = localStorage.getItem('4dtaki_user_' + username);
+    if (userStats) {
+        currentUser = JSON.parse(userStats);
+    } else {
+        currentUser = {
+            username: username,
+            score: 0,
+            wins: 0,
+            losses: 0,
+            matchesPlayed: 0
+        };
+        saveStats();
+    }
+    
+    localStorage.setItem('4dtaki_lastUser', username);
+    
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('setup-menu').style.display = 'flex';
+    updateProfileUI();
+}
+
+function logoutUser() {
+    currentUser = null;
+    localStorage.removeItem('4dtaki_lastUser');
+    document.getElementById('setup-menu').style.display = 'none';
+    document.getElementById('login-overlay').style.display = 'flex';
+    document.getElementById('username-input').value = '';
+}
+
+function saveStats() {
+    if (currentUser) {
+        localStorage.setItem('4dtaki_user_' + currentUser.username, JSON.stringify(currentUser));
+    }
+}
+
+function updateProfileUI() {
+    if (currentUser) {
+        document.getElementById('profile-name').innerText = 'Player: ' + currentUser.username;
+        document.getElementById('profile-score').innerText = currentUser.score;
+        document.getElementById('profile-wins').innerText = currentUser.wins;
+        document.getElementById('profile-losses').innerText = currentUser.losses;
+    }
+}
+
 // Precompute win lines for fast evaluation
 const WIN_LINES = [];
 (function precomputeWinLines() {
@@ -104,14 +177,36 @@ function triggerGameOver(winner) {
     gameRunning = false;
     let message = '';
     
+    let pointsGained = 0;
+    if (currentUser) {
+        currentUser.matchesPlayed++;
+    }
+
     if (winner === 1) {
         player1Wins++;
         document.getElementById('win-count').innerText = player1Wins;
         message = 'Player 1 Wins!';
+        
+        if (currentUser) {
+            currentUser.wins++;
+            pointsGained = gameMode === 'pvp' ? SCORE_MATRIX['pvp'] : SCORE_MATRIX[aiDifficulty];
+            currentUser.score += pointsGained;
+            message += ' (+' + pointsGained + ' pts)';
+        }
     } else {
         player2Wins++;
         document.getElementById('loss-count').innerText = player2Wins;
         message = gameMode === 'ai' ? 'CPU Wins!' : 'Player 2 Wins!';
+        
+        if (currentUser) {
+            currentUser.losses++;
+            // Optional: Give consolation points or keep at 0. Here, +0 pts for loss.
+        }
+    }
+    
+    if (currentUser) {
+        saveStats();
+        updateProfileUI();
     }
     
     document.getElementById('status').innerText = message;

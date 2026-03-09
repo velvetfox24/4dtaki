@@ -9,8 +9,23 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
-    <div id="setup-menu" class="fullscreen-menu">
+    <div id="login-overlay" class="fullscreen-menu">
+        <h1>4D-Taki Login</h1>
+        <div class="menu-group">
+            <label>Enter Username:</label>
+            <input type="text" id="username-input" placeholder="Player1" maxlength="15" autocomplete="off" />
+        </div>
+        <button onclick="document.loginUser()" class="start-btn">LOGIN</button>
+    </div>
+
+    <div id="setup-menu" class="fullscreen-menu" style="display: none;">
         <h1>4D-Taki</h1>
+
+        <div id="user-profile" style="margin-bottom: 20px; font-size: 1.1em; color: #00ffff; border: 1px solid #0088ff; padding: 10px; border-radius: 5px; background: rgba(0, 136, 255, 0.1);">
+            <div style="font-weight: bold; font-size: 1.2em; margin-bottom: 5px;" id="profile-name">User: ---</div>
+            <div>Score: <span id="profile-score" style="color: #ffaa00;">0</span> | W: <span id="profile-wins">0</span> L: <span id="profile-losses">0</span></div>
+            <button onclick="document.logoutUser()" style="margin-top: 10px; font-size: 12px; padding: 5px 10px;">Change User</button>
+        </div>
         
         <div class="menu-group">
             <label>Mode:</label>
@@ -62,6 +77,8 @@
         document.startGame = startGame;
         document.resetGame = resetGame;
         document.showMainMenu = showMainMenu;
+        document.loginUser = loginUser;
+        document.logoutUser = logoutUser;
         
         function toggleDifficulty() {
             var mode = document.getElementById('mode-select').value;
