@@ -1,0 +1,38 @@
+----------------------------------
+
+Component,Technology
+Logic/UI,HTML5 / JavaScript / CSS
+Mobile Wrapper,Capacitor
+Backend/DB,Firebase (Stats & Auth)
+IDE,Android Studio
+Platform,Android
+
+----------------------------------
+
+I've compiled the core components and features of the 4D-Taki (4dtakki) project from our previous sessions. You were building this as a 3D evolution of Tic-Tac-Toe, targeting a mobile Android release using Android Studio and Capacitor.
+Project Overview: 4D-Taki
+
+The game operates on a 4x4x4 grid (64 total cells), significantly expanding the complexity of traditional Tic-Tac-Toe.
+Core Mechanics & Win Logic
+
+    Grid Dimensions: A three-dimensional 4x4x4 playing field.
+
+    Win Conditions: There are 76 possible winning lines (horizontal, vertical, depth, and various 3D diagonals).
+
+    Visual Feedback: The UI includes a feature to highlight the last piece placed to help players track movement in the 3D space.
+
+Key Features
+
+    AI & Strategy: Includes an AI opponent and a feature for LLM-driven strategic hints to assist the player.
+
+    User Systems: Integrated Firebase for handling user accounts and tracking statistics (Wins, Losses, Draws, and Quits).
+
+    Aesthetics: The interface features a dynamic space/nebula background.
+
+Development Environment
+
+    OS: Developing on Kali Linux.
+
+    Frameworks: Built using Capacitor to bridge web code into a native Android APK.
+
+    Automation: You have automated shell scripts prepared for the build process within Android Studio.
